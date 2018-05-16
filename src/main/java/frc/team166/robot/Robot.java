@@ -136,8 +136,8 @@ public class Robot extends TimedRobot {
     }
 
     public Command CrossLineAndDropCube() {
-        return new CommandChain("Cross Line And Drop Cube").then(lift.MoveLiftByInches(-1))
-                .then(drive.DriveTime(3.6, 0.6), lift.MoveLiftByInches(26)).then(manipulator.CubeEject());
+        return new CommandChain("Cross Line And Drop Cube")
+                .then(drive.DriveTime(3.6, 0.6), lift.DeployManipulatorForSwitch()).then(manipulator.CubeEject());
     }
 
     public Command MidAuto() {
@@ -147,19 +147,21 @@ public class Robot extends TimedRobot {
         if (gameData.length() > 0) {
             if (gameData.charAt(0) == 'R') {
                 // "R" is for RIGHT NOT RED
-                degrees = 90;
+                degrees = 45;
                 // turning right
                 System.out.println("Right");
 
             } else {
-                degrees = -90.00;
+                degrees = -45.00;
                 // turning left
                 System.out.println("Left");
             }
         }
-        Command cmdMidAuto = new CommandChain("Mid Auto").then(drive.DriveTime(.75, .6))
-                .then(drive.TurnByDegrees(degrees)).then(drive.DriveTime(.5, .6)).then(drive.TurnByDegrees(-degrees))
-                .then(drive.DriveTime(.3, .6), lift.RaiseLiftALittle());
+        Command cmdMidAuto = new CommandChain("Mid Auto")
+                .then(new CommandChain("Drive To Switch").then(drive.TurnByDegrees(degrees, .6))
+                        .then(drive.DriveTime(.5, .6)).then(drive.TurnByDegrees(-degrees, .6)),
+                        lift.DeployManipulatorForSwitch())
+                .then(manipulator.CubeEject());
         return cmdMidAuto;
 
     }

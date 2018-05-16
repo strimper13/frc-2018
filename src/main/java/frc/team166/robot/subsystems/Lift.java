@@ -420,4 +420,8 @@ public class Lift extends PIDSubsystem {
     public Command DisengageBrake() {
         return new ActionCommand("Don't Brake", this, this::disengageBrake);
     }
+
+    public Command DeployManipulatorForSwitch() {
+        return new CommandChain("Deploy Lift For Switch").then(MoveLiftByInches(-1)).then(MoveLiftByInches(26));
+    }
 }

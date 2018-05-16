@@ -223,7 +223,7 @@ public class Drive extends Subsystem {
         };
     }
 
-    public Command TurnByDegrees(double degrees) {
+    public Command TurnByDegrees(double degrees, double forwardSpeed) {
         return new SubsystemCommand("Turn " + degrees, this) {
             @Override
             protected void initialize() {
@@ -238,7 +238,7 @@ public class Drive extends Subsystem {
             @Override
             protected void execute() {
                 SmartDashboard.putNumber("Drive Angle", angleCorrection);
-                m_drive.arcadeDrive(0.0, angleCorrection);
+                m_drive.arcadeDrive(forwardSpeed, angleCorrection);
 
             }
 
@@ -257,6 +257,10 @@ public class Drive extends Subsystem {
                 drivePidController.disable();
             }
         };
+    }
+
+    public Command TurnByDegrees(double degrees) {
+        return TurnByDegrees(degrees, 0);
     }
 
     public Command DriveTime(double seconds, double speed) {

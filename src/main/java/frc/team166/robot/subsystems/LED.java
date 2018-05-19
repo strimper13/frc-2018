@@ -18,6 +18,7 @@ import frc.team166.robot.RobotMap;
 import java.util.Random;
 
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 
 public class LED extends Subsystem {
@@ -31,6 +32,7 @@ public class LED extends Subsystem {
     DigitalOutputDutyCycle red = new DigitalOutputDutyCycle(RobotMap.DigitalInputs.RED_LED);
     DigitalOutputDutyCycle green = new DigitalOutputDutyCycle(RobotMap.DigitalInputs.GREEN_LED);
     DigitalOutputDutyCycle blue = new DigitalOutputDutyCycle(RobotMap.DigitalInputs.BLUE_LED);
+    Timer lightTime = new Timer();
 
     public LED() {
         registerCommands();
@@ -258,6 +260,16 @@ public class LED extends Subsystem {
         };
     }
 
+    public void teleopInit() {
+        // This makes sure that the autonomous stops running when
+        // teleop starts running. If you want the autonomous to
+        // continue until interrupted by another command, remove
+        // this line or comment it out.
+        //
+        // create timer that goes up evry seond.
+
+    }
+
     public Command Breath(DigitalOutputDutyCycle color, int frequency) {
         return new SubsystemCommand("fade", this) {
             boolean isDutyCycleIncreasing = true;
@@ -265,6 +277,8 @@ public class LED extends Subsystem {
             final double executePeriod = 20 * 0.001; // Approx how often execute is called
             final double dutyCycleChangePerPeriod = 2.0;
             double changeAmount;
+            Random rand = new Random();
+            int seizureTime;
 
             @Override
             protected void initialize() {
@@ -272,6 +286,8 @@ public class LED extends Subsystem {
                 changeAmount = dutyCycleChangePerPeriod / ((period / executePeriod));
                 color.enablePWM(0);
                 isDutyCycleIncreasing = true;
+                seizureTime = rand.nextInt(15);
+                lightTime.start();
             }
 
             @Override
@@ -284,7 +300,9 @@ public class LED extends Subsystem {
                 if ((color.getPWMRate() >= 1) || (color.getPWMRate() <= 0)) {
                     isDutyCycleIncreasing = !isDutyCycleIncreasing;
                 }
-
+                if (lightTime.hasPeriodPassed(seizureTime)) {
+                    NotSeizure(20).start();
+                }
             }
 
             @Override
@@ -325,7 +343,7 @@ public class LED extends Subsystem {
 
             @Override
             protected void execute() {
-                if (System.currentTimeMillis() >= lastUpdateTime + 15) {
+                if (System.currentTimeMillis() >= lastUpdateTime + 20) {
                     lastUpdateTime = System.currentTimeMillis();
                     if (isOn) {
                         blue.set(false);

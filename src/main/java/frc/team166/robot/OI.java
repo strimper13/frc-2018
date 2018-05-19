@@ -16,13 +16,14 @@ public class OI {
     public ButtonJoystick leftDriveStick;
     public ButtonJoystick rightDriveStick;
     public ButtonXboxController xBoxTempest;
+    public ButtonXboxController xBoxDrive;
 
     public OI() {
-        //defines the joysticks as joysticks and assigns left and right
+        // defines the joysticks as joysticks and assigns left and right
         leftDriveStick = new ButtonJoystick(RobotMap.Controller.leftcontrol);
         rightDriveStick = new ButtonJoystick(RobotMap.Controller.rightcontrol);
         xBoxTempest = new ButtonXboxController(RobotMap.Controller.Xboxcontrol);
-
+        xBoxDrive = new ButtonXboxController(RobotMap.Controller.xboxDrive);
 
         xBoxTempest.getButton(ButtonXboxController.xBoxButton.kY.get())
                 .whenPressed(Robot.manipulator.CloseOuterManipulator());
@@ -32,6 +33,11 @@ public class OI {
         xBoxTempest.getButton(ButtonXboxController.xBoxButton.kA.get())
                 .whileHeld(Robot.manipulator.ManipulatorIntakeHeld());
         xBoxTempest.getButton(ButtonXboxController.xBoxButton.kB.get())
+                .whileHeld(Robot.manipulator.ManipulatorDischargeHeld());
+
+        xBoxTempest.getButton(ButtonXboxController.xBoxButton.kBumperLeft.get())
+                .whileHeld(Robot.manipulator.ManipulatorIntakeHeld());
+        xBoxTempest.getButton(ButtonXboxController.xBoxButton.kBumperRight.get())
                 .whileHeld(Robot.manipulator.ManipulatorDischargeHeld());
 
         rightDriveStick.getButton(2).whenPressed(Robot.manipulator.CubeClamp());

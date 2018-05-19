@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.command.Scheduler;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -38,6 +39,8 @@ public class Robot extends TimedRobot {
 
     Command m_autonomousCommand;
     SendableChooser<Command> m_chooser = new SendableChooser<>();
+    Command driveCommand;
+    SendableChooser<Command> driveChooser = new SendableChooser<>();
 
     /**
      * This function is run when the robot is first started up and should be used
@@ -49,10 +52,15 @@ public class Robot extends TimedRobot {
         m_chooser.addDefault("Default Auto", drive.DriveTime(3, 0.6));
         m_chooser.addObject("Mid Auto", MidAuto());
         m_chooser.addObject("Cross Line And Drop Cube", CrossLineAndDropCube());
+
+        driveChooser.addDefault("Joystick Drive", drive.JoystickArcadeTwoStick());
+        driveChooser.addDefault("Xbox Drive", drive.XboxArcade());
+
         SmartDashboard.putData("Auto mode", m_chooser);
         SmartDashboard.putData("Turn 90", drive.TurnByDegrees(90));
         SmartDashboard.putData("Turn -90", drive.TurnByDegrees(-90));
         CameraServer.getInstance().startAutomaticCapture();
+        SmartDashboard.putData("Drive Type", driveChooser);
     }
 
     /**
@@ -118,6 +126,13 @@ public class Robot extends TimedRobot {
         // continue until interrupted by another command, remove
         // this line or comment it out.
         //
+        // create timer that goes up evry seond.
+        driveCommand = driveChooser.getSelected();
+        if (driveCommand != null) {
+            driveCommand.start();
+        }
+
+        led.teleopInit();
     }
 
     /**
@@ -126,6 +141,8 @@ public class Robot extends TimedRobot {
     @Override
     public void teleopPeriodic() {
         Scheduler.getInstance().run();
+        // If timer is greater than however long, run command seizure
+
     }
 
     /**

@@ -122,7 +122,10 @@ public class Drive extends Subsystem {
 
             @Override
             protected void execute() {
-                m_drive.arcadeDrive(-Robot.m_oi.xBoxTempest.getY(Hand.kLeft), Robot.m_oi.xBoxTempest.getX(Hand.kRight));
+                m_drive.arcadeDrive(
+                        (Robot.m_oi.xBoxDrive.getTriggerAxis(Hand.kRight)
+                                - Robot.m_oi.xBoxDrive.getTriggerAxis(Hand.kLeft)),
+                        Robot.m_oi.xBoxDrive.getX(Hand.kLeft));
 
             }
 
@@ -137,7 +140,7 @@ public class Drive extends Subsystem {
 
             @Override
             protected void execute() {
-                m_drive.arcadeDrive(-Robot.m_oi.leftDriveStick.getY() * 0.8, Robot.m_oi.rightDriveStick.getX());
+                m_drive.arcadeDrive(-Robot.m_oi.leftDriveStick.getY(), Robot.m_oi.rightDriveStick.getX());
 
             }
 

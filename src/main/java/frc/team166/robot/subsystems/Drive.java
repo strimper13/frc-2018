@@ -53,8 +53,8 @@ public class Drive extends Subsystem {
 
     // defines values that will be used in the PIDController (In order of where they
     // will fall in the Controller)
-    final static double kP = 0.015;
-    final static double kI = 0.00005;
+    final static double kP = 0.016;
+    final static double kI = 0.00007;
     final static double kD = 0;
     final static double kF = 0;
 
@@ -86,7 +86,10 @@ public class Drive extends Subsystem {
         addChild(m_drive);
         addChild(drivePidController);
         addChild("Front LiDAR", frontLidar);
-        tempestGyro.setSensitivity(0.0125 / 5.45);
+        tempestGyro.setSensitivity(0.0125 / 5.45 * (.825)); // We don't know what the
+        // sensitivity of this gyro actually
+        // is...
+        // Update: We think this is just the default
         drivePidController.setOutputRange(-0.6, 0.6);
         drivePidController.setPercentTolerance(0.90);
 

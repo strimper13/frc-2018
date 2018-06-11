@@ -49,9 +49,9 @@ public class Robot extends TimedRobot {
     @Override
     public void robotInit() {
         m_oi = new OI();
-        m_chooser.addDefault("Default Auto", drive.DriveTime(3, 0.6));
+        // m_chooser.addDefault("Default Auto", drive.DriveTime(3, 0.6));
         m_chooser.addObject("Mid Auto", MidAuto());
-        m_chooser.addObject("Cross Line And Drop Cube", CrossLineAndDropCube());
+        m_chooser.addDefault("Cross Line And Drop Cube", CrossLineAndDropCube());
 
         driveChooser.addDefault("Joystick Drive", drive.JoystickArcadeTwoStick());
         driveChooser.addDefault("Xbox Drive", drive.XboxArcade());
@@ -141,8 +141,6 @@ public class Robot extends TimedRobot {
     @Override
     public void teleopPeriodic() {
         Scheduler.getInstance().run();
-        // If timer is greater than however long, run command seizure
-
     }
 
     /**
@@ -154,33 +152,41 @@ public class Robot extends TimedRobot {
 
     public Command CrossLineAndDropCube() {
         return new CommandChain("Cross Line And Drop Cube")
-                .then(drive.DriveTime(3.6, 0.6), lift.DeployManipulatorForSwitch()).then(manipulator.CubeEject());
+                .then(drive.DriveTime(3.2, 0.6), lift.DeployManipulatorForSwitch()).then(manipulator.CubeEject());
     }
 
     public Command MidAuto() {
         String gameData;
         gameData = DriverStation.getInstance().getGameSpecificMessage();
-        double degrees = 0.0;
+        double firstDegrees = 0.0;
+        double secondDegrees = 0.0;
         if (gameData.length() > 0) {
             if (gameData.charAt(0) == 'R') {
                 // "R" is for RIGHT NOT RED
-                degrees = 45;
+                firstDegrees = 70;
+                secondDegrees = 250;
                 // turning right
                 System.out.println("Right");
 
             } else {
-                degrees = -45.00;
+                firstDegrees = 250;
+                secondDegrees = 70;
                 // turning left
                 System.out.println("Left");
             }
         }
-        Command cmdMidAuto = new CommandChain("Mid Auto")
-                .then(new CommandChain("Drive To Switch").then(drive.TurnByDegrees(degrees, .6))
-                        .then(drive.DriveTime(.5, .6)).then(drive.TurnByDegrees(-degrees, .6)),
-                        lift.DeployManipulatorForSwitch())
-                .then(manipulator.CubeEject());
+        Command cmdMidAuto = new CommandChain("Mid Auto").then(
+                new CommandChain("Drive To Switch").then(drive.DriveTime(.4, .6))
+                        .then(drive.TurnByDegrees(firstDegrees)).then(drive.DriveTime(1.75, .6))
+                        .then(drive.TurnByDegrees(secondDegrees)).then(drive.DriveTime(3.9, .6)),
+                lift.DeployManipulatorForSwitch()).then(manipulator.ManipulatorDischarge());
         return cmdMidAuto;
 
     }
 
+    public Command RightSwitch(double degrees) {
+        return new CommandChain("Right Switch").then(new CommandChain("SWITCHYYYYYYY").then(drive.DriveTime(3.2, 0.6))
+                .then(drive.TurnByDegrees(degrees)).then(drive.DriveTime(1, .6)), lift.DeployManipulatorForSwitch())
+                .then(manipulator.CubeEject());
+    }
 }

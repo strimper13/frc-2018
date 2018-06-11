@@ -265,18 +265,20 @@ public class Lift extends PIDSubsystem {
                 double elevatorControl = Robot.m_oi.xBoxTempest.getTriggerAxis(Hand.kRight)
                         - Robot.m_oi.xBoxTempest.getTriggerAxis(Hand.kLeft);
 
-                if (elevatorControl >= .1 || elevatorControl <= -0.1) {
-                    disengageBrake();
-                } else {
-                    engageBrake();
-
-                }
                 if (elevatorControl > 0 && !topLimitSwitch.get()) {
+                    disengageBrake();
                     liftDrive.set(Robot.m_oi.xBoxTempest.getTriggerAxis(Hand.kLeft));
                 } else if ((elevatorControl < 0 && !bottomLimitSwitch.get())) {
+                    disengageBrake();
                     liftDrive.set(Robot.m_oi.xBoxTempest.getTriggerAxis(Hand.kRight));
                 } else {
+                    if (elevatorControl <= .1 && elevatorControl >= -0.1) {
+                        engageBrake();
+                    } else {
+                        disengageBrake();
+                    }
                     liftDrive.set(elevatorControl);
+
                 }
 
             }
@@ -295,6 +297,7 @@ public class Lift extends PIDSubsystem {
             protected void interrupted() {
                 enable();
             }
+
         };
     }
 

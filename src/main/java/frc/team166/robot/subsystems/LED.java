@@ -347,10 +347,12 @@ public class LED extends Subsystem {
                     lastUpdateTime = System.currentTimeMillis();
                     if (isOn) {
                         blue.set(false);
+                        green.set(true);
                         red.set(true);
                         isOn = false;
                         count++;
                     } else {
+                        green.set(false);
                         blue.set(true);
                         red.set(false);
                         isOn = true;
@@ -372,6 +374,7 @@ public class LED extends Subsystem {
             protected void end() {
                 red.set(false);
                 blue.set(false);
+                green.set(false);
             }
         };
     }

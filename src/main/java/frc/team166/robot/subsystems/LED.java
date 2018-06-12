@@ -47,6 +47,9 @@ public class LED extends Subsystem {
         SmartDashboard.putData("All Off", new ActionCommand("OFF GERALD", this, this::allOff));
         SmartDashboard.putData("STEVIE WONDER THEM", NotSeizure(1000));
         SmartDashboard.putData("NYAN", Rainbow(1000));
+        SmartDashboard.putData("Sorry Ben", Sychodrome(1000));
+        SmartDashboard.putData("Breathe Team Color", BreathTeamColor());
+        SmartDashboard.putData("BLIND THEM ALLLLLL", BlinkStevie());
     }
 
     private void allOff() {
@@ -375,6 +378,95 @@ public class LED extends Subsystem {
                 red.set(false);
                 blue.set(false);
                 green.set(false);
+            }
+        };
+    }
+
+    public Command Sychodrome(int numberOfBlinks) {
+
+        return new SubsystemCommand(this) {
+            double lastUpdateTime = System.currentTimeMillis();
+            boolean isOn = true;
+            double count = 0;
+
+            @Override
+            protected void initialize() {
+                count = 0;
+                blue.set(true);
+            }
+
+            @Override
+            protected void execute() {
+                if (System.currentTimeMillis() >= lastUpdateTime + 20) {
+                    lastUpdateTime = System.currentTimeMillis();
+                    if (isOn) {
+                        blue.set(false);
+                        green.set(true);
+                        red.set(true);
+                        isOn = false;
+                        count++;
+                    } else {
+                        green.set(true);
+                        blue.set(false);
+                        red.set(false);
+                        isOn = true;
+
+                    }
+                }
+            }
+
+            @Override
+            protected boolean isFinished() {
+                if (count >= numberOfBlinks) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+
+            @Override
+            protected void end() {
+                red.set(false);
+                blue.set(false);
+                green.set(false);
+            }
+        };
+    }
+
+    public Command BlinkStevie() {
+        return new SubsystemCommand(this) {
+            double lastUpdateTime = System.currentTimeMillis();
+            boolean isOn = true;
+
+            @Override
+            protected void initialize() {
+                setTeamColor(true);
+            }
+
+            @Override
+            protected void execute() {
+                if (System.currentTimeMillis() >= lastUpdateTime + 20) {
+                    lastUpdateTime = System.currentTimeMillis();
+                    if (isOn) {
+                        red.set(false);
+                        blue.set(true);
+                        isOn = false;
+                    } else {
+                        red.set(true);
+                        blue.set(false);
+                        isOn = true;
+                    }
+                }
+            }
+
+            @Override
+            protected boolean isFinished() {
+                return false;
+            }
+
+            @Override
+            protected void end() {
+                setTeamColor(false);
             }
         };
     }

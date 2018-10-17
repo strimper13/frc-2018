@@ -40,6 +40,8 @@ public class OI {
         xBoxTempest.getButton(ButtonXboxController.xBoxButton.kBumperRight.get())
                 .whileHeld(Robot.manipulator.ManipulatorDischargeHeld());
 
+        // xBoxTempest.getButton(ButtonXboxController.xBoxButton.kStickRight);
+
         rightDriveStick.getButton(2).whenPressed(Robot.manipulator.CubeClamp());
         rightDriveStick.getButton(1).whenPressed(Robot.manipulator.CubeDrop());
 

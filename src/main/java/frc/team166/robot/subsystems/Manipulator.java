@@ -341,6 +341,11 @@ public class Manipulator extends PIDSubsystem {
         return new CommandChain("Cube Pickup with Lights").then(CubePickup()).then(Robot.led.BlinkGreen(blinkCount));
     }
 
+    public Command SwitchLift() {
+        return new CommandChain("Switch Lift").then(Robot.lift.DeployManipulatorForSwitch())
+                .then(Robot.manipulator.CubeEject());
+    }
+
     public Command DeployManipulator() {
         return new SubsystemCommand("Deploy Manipulator", this) {
 

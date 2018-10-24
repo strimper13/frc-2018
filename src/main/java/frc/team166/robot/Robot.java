@@ -189,4 +189,9 @@ public class Robot extends TimedRobot {
                 .then(drive.TurnByDegrees(degrees)).then(drive.DriveTime(1, .6)), lift.DeployManipulatorForSwitch())
                 .then(manipulator.CubeEject());
     }
+
+    public static Command DriverSwitch() {
+        return new CommandChain("Driver Switch").then(new CommandChain("Driver Is All")
+                .then(lift.DeployManipulatorForSwitch()).then(manipulator.ManipulatorDischarge()));
+    }
 }

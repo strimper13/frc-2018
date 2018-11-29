@@ -18,10 +18,10 @@ import edu.wpi.first.wpilibj.Preferences;
 public class RobotMap {
     public static class CAN {
         // changes motor ports into integers
-        public final static int FRONT_RIGHT = 4;
-        public final static int FRONT_LEFT = 8;
-        public final static int BACK_RIGHT = 5;
-        public final static int BACK_LEFT = 9;
+        public final static int FRONT_RIGHT = 1;
+        public final static int FRONT_LEFT = 3;
+        public final static int BACK_RIGHT = 4;
+        public final static int BACK_LEFT = 2;
         public final static int ROLLER_LEFT = 3;
         public final static int ROLLER_RIGHT = 2;
         public final static int LIFT_MOTOR_A = 6;
@@ -75,6 +75,10 @@ public class RobotMap {
         public final static int BLUE_LED = 6;
         public final static int LIFT_A = 0;
         public final static int LIFT_B = 1;
+        public final static int LEFT_ENCODER_A = 1;
+        public final static int LEFT_ENCODER_B = 2;
+        public final static int RIGHT_ENCODER_A = 3;
+        public final static int RIGHT_ENCODER_B = 4;
     }
 
     public static class PreferenceStrings {

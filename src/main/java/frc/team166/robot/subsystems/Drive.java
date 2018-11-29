@@ -7,9 +7,10 @@
 
 package frc.team166.robot.subsystems;
 
-import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
+import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 
 import edu.wpi.first.wpilibj.AnalogGyro;
+import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.PIDController;
 import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj.SpeedControllerGroup;
@@ -25,6 +26,11 @@ import frc.team166.chopshoplib.commands.CommandChain;
 import frc.team166.chopshoplib.commands.SubsystemCommand;
 import frc.team166.chopshoplib.sensors.Lidar;
 import edu.wpi.first.wpilibj.I2C.Port;
+import jaci.pathfinder.Pathfinder;
+import jaci.pathfinder.Trajectory;
+import jaci.pathfinder.Waypoint;
+import jaci.pathfinder.followers.EncoderFollower;
+import jaci.pathfinder.modifiers.TankModifier;
 
 /**
  * An example subsystem. You can replace me with your own Subsystem.
@@ -34,15 +40,19 @@ public class Drive extends Subsystem {
     // declare lidar
     Lidar frontLidar = new Lidar(Port.kOnboard, 0x10);
     // defines the gyro
-    AnalogGyro tempestGyro = new AnalogGyro(RobotMap.AnalogInputs.tempestgyro);
+    AnalogGyro gyro = new AnalogGyro(RobotMap.AnalogInputs.tempestgyro);
+    // defines the encoders (left and right)
+    Encoder leftEncoder = new Encoder(RobotMap.DigitalInputs.LEFT_ENCODER_A, RobotMap.DigitalInputs.LEFT_ENCODER_B);
+    Encoder rightEncoder = new Encoder(RobotMap.DigitalInputs.RIGHT_ENCODER_A, RobotMap.DigitalInputs.RIGHT_ENCODER_B);
+
     // defines the left motors as motors and combines the left motors into one motor
-    WPI_VictorSPX m_rearleft = new WPI_VictorSPX(RobotMap.CAN.BACK_LEFT);
-    WPI_VictorSPX m_frontleft = new WPI_VictorSPX(RobotMap.CAN.FRONT_LEFT);
+    WPI_TalonSRX m_rearleft = new WPI_TalonSRX(RobotMap.CAN.BACK_LEFT);
+    WPI_TalonSRX m_frontleft = new WPI_TalonSRX(RobotMap.CAN.FRONT_LEFT);
     SpeedControllerGroup m_left = new SpeedControllerGroup(m_frontleft, m_rearleft);
     // defines the right motors as motors and combines the left motors into one
     // motor
-    WPI_VictorSPX m_rearright = new WPI_VictorSPX(RobotMap.CAN.BACK_RIGHT);
-    WPI_VictorSPX m_frontright = new WPI_VictorSPX(RobotMap.CAN.FRONT_RIGHT);
+    WPI_TalonSRX m_rearright = new WPI_TalonSRX(RobotMap.CAN.BACK_RIGHT);
+    WPI_TalonSRX m_frontright = new WPI_TalonSRX(RobotMap.CAN.FRONT_RIGHT);
     SpeedControllerGroup m_right = new SpeedControllerGroup(m_frontright, m_rearright);
 
     /**
@@ -50,6 +60,52 @@ public class Drive extends Subsystem {
      * that can be used for arcade and tank drive, amung other things
      */
     DifferentialDrive m_drive = new DifferentialDrive(m_left, m_right);
+
+    // 3 Waypoints
+    // Waypoint[] points = new Waypoint[] {
+
+    // new Waypoint(-4, -1, Pathfinder.d2r(-45)),
+    // Waypoint @ x=-4, y=-1, exit angle=-45 degrees
+
+    // new Waypoint(-2, -2, 0),
+    // Waypoint @ x=-2, y=-2, exit angle=0 radians
+
+    // new Waypoint(0, 0, 0)
+    // Waypoint @ x=0, y=0, exit angle=0 radians
+
+    // };
+
+    // Create the Trajectory Configuration
+    //
+    // Arguments:
+    // Fit Method: HERMITE_CUBIC or HERMITE_QUINTIC
+    // Sample Count: SAMPLES_HIGH (100 000)
+    // SAMPLES_LOW (10 000)
+    // SAMPLES_FAST (1 000)
+    // Time Step: 0.05 Seconds
+    // Max Velocity: 1.7 m/s
+    // Max Acceleration: 2.0 m/s/s
+    // Max Jerk: 60.0 m/s/s/s
+    final double maxVelocity = 1.7;
+    Trajectory.Config config = new Trajectory.Config(Trajectory.FitMethod.HERMITE_CUBIC, Trajectory.Config.SAMPLES_HIGH,
+            0.05, maxVelocity, 2.0, 60.0);
+    Waypoint[] points = new Waypoint[] { new Waypoint(-4, -1, Pathfinder.d2r(-45)), new Waypoint(-2, -2, 0),
+            new Waypoint(0, 0, 0)
+
+    };
+
+    // Generate the trajectory
+    Trajectory trajectory = Pathfinder.generate(points, config);
+
+    // Wheelbase Width = 0.5m
+    // Tempest Frame is 29 inches across = .737Meters
+    // Tempest Axel spacing is 25 inches = .635Meters
+    TankModifier modifier = new TankModifier(trajectory).modify(0.635);
+
+    // Do something with the new Trajectories...
+
+    EncoderFollower leftFollower = new EncoderFollower(modifier.getLeftTrajectory());
+    EncoderFollower rightFollower = new EncoderFollower(modifier.getRightTrajectory());
 
     // defines values that will be used in the PIDController (In order of where they
     // will fall in the Controller)
@@ -64,7 +120,7 @@ public class Drive extends Subsystem {
 
     // PIDController loop used to find the power of the motors needed to keep the
     // angle of the gyro at 0
-    PIDController drivePidController = new PIDController(kP, kI, kD, kF, tempestGyro, (double value) -> {
+    PIDController drivePidController = new PIDController(kP, kI, kD, kF, gyro, (double value) -> {
         // this assigns the output to the angle (double) defined later in the code)
         angleCorrection = value;
     });
@@ -72,7 +128,7 @@ public class Drive extends Subsystem {
     final static double AUTOMATIC_ROBOT_FORWARD_SPEED = .2;
     final static double ABSOLUTE_TOLERANCE_ANGLE = 3;
 
-    // this makes children that control the tempestGyro, drive motors, and
+    // this makes children that control the gyro, drive motors, and
     // PIDController loop.
     public Drive() {
 
@@ -82,11 +138,11 @@ public class Drive extends Subsystem {
         // SmartDashboard.putData("Drive 2s", DriveTime(2, .6));
         // SmartDashboard.putData("Drive Box", DriveBox());
 
-        addChild(tempestGyro);
+        addChild(gyro);
         addChild(m_drive);
         addChild(drivePidController);
         addChild("Front LiDAR", frontLidar);
-        tempestGyro.setSensitivity(0.0125 / 5.45 * (.825)); // We don't know what the
+        gyro.setSensitivity(0.0125 / 5.45 * (.825)); // We don't know what the
         // sensitivity of this gyro actually
         // is...
         // Update: We think this is just the default
@@ -103,6 +159,27 @@ public class Drive extends Subsystem {
         drivePidController.setContinuous();
         drivePidController.setAbsoluteTolerance(Preferences.getInstance()
                 .getDouble(RobotMap.PreferenceStrings.ABSOLUTE_TOLERANCE_ANGLE, ABSOLUTE_TOLERANCE_ANGLE));
+
+        // Encoder Position is the current, cumulative position of your encoder. If
+        // you're using an SRX, this will be the
+        // 'getEncPosition' function.
+        // 1000 is the amount of encoder ticks per full revolution
+        // Wheel Diameter is the diameter of your wheels (or pulley for a track system)
+        // in meters
+        leftFollower.configureEncoder(leftEncoder.get(), 1000, .1016);
+        rightFollower.configureEncoder(rightEncoder.get(), 1000, .1016);
+        // The first argument is the proportional gain. Usually this will be quite high
+        // The second argument is the integral gain. This is unused for motion profiling
+        // The third argument is the derivative gain. Tweak this if you are unhappy with
+        // the tracking of the trajectory
+        // The fourth argument is the velocity ratio. This is 1 over the maximum
+        // velocity you provided in the
+        // trajectory configuration (it translates m/s to a -1 to 1 scale that your
+        // motors can read)
+        // The fifth argument is your acceleration gain. Tweak this if you want to get
+        // to a higher or lower speed quicker
+        leftFollower.configurePIDVA(1.0, 0.0, 0.0, 1 / maxVelocity, 0);
+        rightFollower.configurePIDVA(1.0, 0.0, 0.0, 1 / maxVelocity, 0);
     }
 
     // the default command for this code is supposed to rotate the robot so that
@@ -114,6 +191,32 @@ public class Drive extends Subsystem {
 
     public void reset() {
         m_drive.stopMotor();
+    }
+
+    public Command followPath() {
+        return new SubsystemCommand("followPath", this) {
+
+            @Override
+            protected boolean isFinished() {
+                return false;
+            }
+
+            @Override
+            protected void execute() {
+                double leftOutput = leftFollower.calculate(leftEncoder.get());
+                double rightOutput = rightFollower.calculate(rightEncoder.get());
+
+                double gyro_heading = gyro.getAngle(); // Assuming the gyro is giving a value in degrees
+                double desired_heading = Pathfinder.r2d(leftFollower.getHeading()); // Should also be in degrees
+
+                double angleDifference = Pathfinder.boundHalfDegrees(desired_heading - gyro_heading);
+                double turn = 0.8 * (-1.0 / 80.0) * angleDifference;
+
+                m_left.set(leftOutput + turn);
+                m_right.set(rightOutput - turn);
+
+            }
+        };
     }
 
     public Command XboxArcade() {
@@ -160,7 +263,7 @@ public class Drive extends Subsystem {
             @Override
             protected void initialize() {
                 drivePidController.reset();
-                drivePidController.setSetpoint(tempestGyro.getAngle());
+                drivePidController.setSetpoint(gyro.getAngle());
                 drivePidController.enable();
             }
 
@@ -195,7 +298,7 @@ public class Drive extends Subsystem {
 
             @Override
             protected void initialize() {
-                drivePidController.setSetpoint(tempestGyro.getAngle());
+                drivePidController.setSetpoint(gyro.getAngle());
                 drivePidController.reset();
                 drivePidController.enable();
             }
@@ -233,7 +336,7 @@ public class Drive extends Subsystem {
         return new SubsystemCommand("Turn " + degrees, this) {
             @Override
             protected void initialize() {
-                tempestGyro.reset();
+                gyro.reset();
                 drivePidController.reset();
                 drivePidController.setAbsoluteTolerance(Preferences.getInstance()
                         .getDouble(RobotMap.PreferenceStrings.ABSOLUTE_TOLERANCE_ANGLE, ABSOLUTE_TOLERANCE_ANGLE));
@@ -274,7 +377,7 @@ public class Drive extends Subsystem {
             @Override
             protected void initialize() {
                 drivePidController.reset();
-                // drivePidController.setSetpoint(tempestGyro.getAngle());
+                // drivePidController.setSetpoint(gyro.getAngle());
                 // drivePidController.enable();
                 setTimeout(seconds);
             }

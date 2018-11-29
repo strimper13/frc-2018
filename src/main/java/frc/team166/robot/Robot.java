@@ -8,19 +8,15 @@
 package frc.team166.robot;
 
 import edu.wpi.first.wpilibj.CameraServer;
-import edu.wpi.first.wpilibj.Compressor;
-import edu.wpi.first.wpilibj.DriverStation;
+
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.Timer;
+
 import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.command.Scheduler;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.team166.chopshoplib.commands.CommandChain;
+
 import frc.team166.robot.subsystems.Drive;
-import frc.team166.robot.subsystems.Manipulator;
-import frc.team166.robot.subsystems.LED;
-import frc.team166.robot.subsystems.Lift;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -30,12 +26,9 @@ import frc.team166.robot.subsystems.Lift;
  * project.
  */
 public class Robot extends TimedRobot {
-    public static final LED led = new LED();
+
     public static final Drive drive = new Drive();
-    public static final Manipulator manipulator = new Manipulator();
-    public static final Lift lift = new Lift();
     public static OI m_oi;
-    public static final Compressor compressy = new Compressor(1);
 
     Command m_autonomousCommand;
     SendableChooser<Command> m_chooser = new SendableChooser<>();
@@ -50,8 +43,6 @@ public class Robot extends TimedRobot {
     public void robotInit() {
         m_oi = new OI();
         // m_chooser.addDefault("Default Auto", drive.DriveTime(3, 0.6));
-        m_chooser.addObject("Mid Auto", MidAuto());
-        m_chooser.addDefault("Cross Line And Drop Cube", CrossLineAndDropCube());
 
         driveChooser.addDefault("Joystick Drive", drive.JoystickArcadeTwoStick());
         driveChooser.addDefault("Xbox Drive", drive.XboxArcade());
@@ -70,9 +61,6 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void disabledInit() {
-        drive.reset();
-        lift.reset();
-        manipulator.reset();
 
     }
 
@@ -132,7 +120,6 @@ public class Robot extends TimedRobot {
             driveCommand.start();
         }
 
-        led.teleopInit();
     }
 
     /**
@@ -150,48 +137,4 @@ public class Robot extends TimedRobot {
     public void testPeriodic() {
     }
 
-    public Command CrossLineAndDropCube() {
-        return new CommandChain("Cross Line And Drop Cube")
-                .then(drive.DriveTime(3.2, 0.6), lift.DeployManipulatorForSwitch()).then(manipulator.CubeEject());
-    }
-
-    public Command MidAuto() {
-        String gameData;
-        gameData = DriverStation.getInstance().getGameSpecificMessage();
-        double firstDegrees = 0.0;
-        double secondDegrees = 0.0;
-        if (gameData.length() > 0) {
-            if (gameData.charAt(0) == 'R') {
-                // "R" is for RIGHT NOT RED
-                firstDegrees = 70;
-                secondDegrees = 250;
-                // turning right
-                System.out.println("Right");
-
-            } else {
-                firstDegrees = 250;
-                secondDegrees = 70;
-                // turning left
-                System.out.println("Left");
-            }
-        }
-        Command cmdMidAuto = new CommandChain("Mid Auto").then(
-                new CommandChain("Drive To Switch").then(drive.DriveTime(.4, .6))
-                        .then(drive.TurnByDegrees(firstDegrees)).then(drive.DriveTime(1.75, .6))
-                        .then(drive.TurnByDegrees(secondDegrees)).then(drive.DriveTime(3.9, .6)),
-                lift.DeployManipulatorForSwitch()).then(manipulator.ManipulatorDischarge());
-        return cmdMidAuto;
-
-    }
-
-    public Command RightSwitch(double degrees) {
-        return new CommandChain("Right Switch").then(new CommandChain("SWITCHYYYYYYY").then(drive.DriveTime(3.2, 0.6))
-                .then(drive.TurnByDegrees(degrees)).then(drive.DriveTime(1, .6)), lift.DeployManipulatorForSwitch())
-                .then(manipulator.CubeEject());
-    }
-
-    public static Command DriverSwitch() {
-        return new CommandChain("Driver Switch").then(new CommandChain("Driver Is All")
-                .then(lift.DeployManipulatorForSwitch()).then(manipulator.ManipulatorDischarge()));
-    }
 }
